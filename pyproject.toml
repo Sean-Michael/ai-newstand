@@ -1,7 +1,9 @@
 [project]
 name = "ai-newstand"
 version = "0.1.0"
-description = "Add your description here"
+description = "Daily newsletters on AI/ML/DevOps topics from k8s to Agentic Workflows!"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "feedparser>=6.0.12",
+]
