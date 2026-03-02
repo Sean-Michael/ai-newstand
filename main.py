@@ -1,3 +1,5 @@
+MAX_REVISIONS = 3
+
 def ingest_rss_feeds():
     """Parse RSS feeds and return dictionary of information"""
     articles = None
@@ -31,6 +33,7 @@ def main():
 
     final = None
     feedback = None
+    revisions = 0
     raw_articles = ingest_rss_feeds()
     curated_articles = curator(raw_articles)
 
@@ -42,6 +45,7 @@ def main():
             final = draft
         else:
             draft = writer(curated_articles, feedback)
+            revisions += 1
 
 if __name__ == "__main__":
     main()
