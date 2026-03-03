@@ -26,10 +26,11 @@ import re
 import ollama
 from zoneinfo import ZoneInfo
 
-RESEARCHER_MODEL = "qwen2.5:3b"
-WRITER_MODEL = "qwen3.5:9b"
-EDITOR_MODEL = "qwen3.5:9b"
+RESEARCHER_MODEL = "mistral:7b-instruct-v0.3-q8_0"
+WRITER_MODEL = "mistral:7b-instruct-v0.3-q8_0"
+EDITOR_MODEL = "mistral:7b-instruct-v0.3-q8_0"
 MAX_REVISIONS = 3
+TIMEFRAME_HOURS = 24
 INTERESTS = [
     "AI", "ML", "MLOps", "LLMOps", "Platform Engineering", "AI Engineering",
     "DevOps", "Kubernetes", "NVIDIA", "LangChain", "Agents", "Anthropic", "Claude Code", "Codex",
@@ -78,7 +79,7 @@ def ingest_rss_feeds() -> dict:
             if date:
                 timestamp = mktime(date)
                 datetime_obj = datetime.fromtimestamp(timestamp, UTC)
-                if  datetime_obj > current_utc_time - timedelta(hours=24):
+                if  datetime_obj > current_utc_time - timedelta(hours=TIMEFRAME_HOURS):
                     results[name].append(entry)
         if results.get(name, []):
             logging.debug(f"Got {len(results.get(name))} recent entries for {name}")    
@@ -95,7 +96,7 @@ def build_researcher_prompt(interests: list[str], articles: list[dict[str]]) -> 
             "link": entry.link
     
     1. Select no more than 10 articles that best match the interest topics and criteria.
-        - Select no more than 3 articles from any single source
+        - Try to use a mixture of sources to capture a variety of topics.
         - Prioritize content from: Hugging Face Blog, MLOps Community, CNCF Blog when available
     2. Gather the UNIQUE links for each article 
     3. Return ONLY a JSON array of selected article links, nothing else. Example format:
@@ -109,7 +110,15 @@ def build_researcher_prompt(interests: list[str], articles: list[dict[str]]) -> 
 
 def summarize_article(article: dict):
     system_prompt = "You are a precise newsletter researcher. Follow instructions exactly. Return only what is asked."
-    user_prompt = f"Read the following article content and return ONLY a summary of what you read. ARTICLE: {re.sub(r'<[^>]+>', '', article.get('content'))}"
+    user_prompt = f"""
+        Read the following article content and generate a thorough research summary of what you read.
+        Include key details and learnings that might interest an AI/ML Engineer.
+        Only use information from within the article, do not make anything up. If there is no information in the article,
+        indicate that.
+        
+        ARTICLE: 
+        {re.sub(r'<[^>]+>', '', article.get('content'))}
+    """
     response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, user_prompt)
 
     summary = response.message.content
@@ -167,10 +176,12 @@ def writer(articles: str, feedback:str | None) -> str:
     now_pacific = datetime.now(ZoneInfo("America/Los_Angeles"))
     pacific_string_formatted = now_pacific.strftime("%Y-%m-%d")
     newsletter = ""
+    if feedback is None:
+        feedback = ""
 
     system_prompt = "You are a technical newsletter writer, be precise and follow instructions exactly."
     user_prompt = f"""
-        Given a list of summarized articles and the date, produce a markdown formatted newsletter in the following format:
+        Given a list of summarized articles and the date, write a markdown formatted newsletter in the following format:
         - Header with the {pacific_string_formatted} and some title relating to a key story or theme
         - One highlighted story that goes into some more depth
         - Several minor stories
@@ -193,15 +204,15 @@ def writer(articles: str, feedback:str | None) -> str:
 
 def editor(draft: str) -> str:
     """Take draft newsletter and provide feedback, if no edits, return LGTM!"""
-    system_prompt = "You are a technical newsletter editor, be precise and follow instructions exactly."
+    system_prompt = """
+        You are a technical newsletter editor, be precise and follow instructions exactly. 
+        If the draft looks good enough without glaring omissions or issues, simply respond with 'LGTM'.
+        Otherwise respond ONLY with the feedback for the writer.
+    """
     user_prompt = f"""
         Given a draft of a newsletter focused on AI / ML and DevOps, provide critical feedback that improves the form and
         readability of the newsletter. Make sure it's good for a 'coffee read' in the morning for a DevOps Engineer wanting to
         keep up to date on the latest trends and releases in AI.
-
-        If the draft looks good enough without glaring omissions or issues, simply respond with 'LGTM'
-        
-        Otherwise respond ONLY with the feedback for the writer.
 
         DRAFT:
         {draft}
@@ -214,11 +225,15 @@ def editor(draft: str) -> str:
     return feedback
 
 
-def write_to_s3(final: str) -> None:
+def write_newsletter(final: str) -> None:
     """
     Save a dated article with a generated title to S3
     On failure, write to a local file for backup.
     """
+    now_pacific = datetime.now(ZoneInfo("America/Los_Angeles"))
+    pacific_string_formatted = now_pacific.strftime("%Y-%m-%d")
+    with open(f"{pacific_string_formatted}-Newsletter.md", "w") as file:
+        file.write(final)
     return
 
 
@@ -226,7 +241,8 @@ def main():
     """Main execution loop"""
     ready_to_publish = False
 
-    final = None
+    final = ""
+    draft = ""
     feedback = None
     revisions = 0
     raw_articles = ingest_rss_feeds()
@@ -235,12 +251,14 @@ def main():
     while not ready_to_publish and revisions < MAX_REVISIONS:
         draft = writer(curated_articles, feedback)
         feedback = editor(draft)
-        if "LGTM" in feedback:
+        if feedback.strip() == "LGTM":
             ready_to_publish = True
             final = draft
             logging.info("Editor approved the draft, print it!")
         revisions += 1
+    final = draft
     logging.info(f"Agent loop finished in {revisions} iterations.")
+    write_newsletter(final)
 
 
 if __name__ == "__main__":
