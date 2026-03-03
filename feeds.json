@@ -6,5 +6,15 @@
     "MIT Technology Review - Artificial intelligence": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
     "OpenAI News": "https://openai.com/news/rss.xml",
     "AWS News Blog - Artificial intelligence": "https://aws.amazon.com/blogs/aws/category/artificial-intelligence/feed/",
-    "Kubernetes": "https://kubernetes.io/feed.xml"
+    "Kubernetes Blog": "https://kubernetes.io/feed.xml",
+    "Y Combinator": "https://news.ycombinator.com/rss",
+    "Hacker News - Best": "https://hnrss.org/best",
+    "Hacker News - DevOps": "https://hnrss.org/newest?q=devops+kubernetes",
+    "Hacker News - LLM": "https://hnrss.org/newest?q=LLM",
+    "The New Stack": "https://thenewstack.io/feed",
+    "CNCF Blog": "https://www.cncf.io/feed/",
+    "MLOps Community": "https://mlops.community/feed",
+    "ArXiv CS.LG": "https://arxiv.org/rss/cs.LG",
+    "Weights & Biases": "https://wandb.ai/fully-connected/feed",
+    "LangChain Blog": "https://feeder.co/discover/caa816503a/blog-langchain-dev"
 }
