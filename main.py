@@ -101,9 +101,8 @@ def build_researcher_prompt(interests: list[str], articles: list[dict[str]]) -> 
 
 
 def summarize_article(article: dict):
-    unpacked_content = (article.get('content', [{}])[0].get('value', '') or article.get('summary', 'NO CONTENT'))[:3000]
     system_prompt = "You are a precise newsletter researcher. Follow instructions exactly. Return only what is asked."
-    user_prompt = f"Read the following article content and return ONLY a summary of what you read. ARTICLE: {unpacked_content}"
+    user_prompt = f"Read the following article content and return ONLY a summary of what you read. ARTICLE: {article.get('content')}"
     response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, user_prompt)
 
     summary = response.message.content
@@ -125,7 +124,7 @@ def researcher(raw_articles: list[dict]) -> list[dict] | None:
             "source": source,
             "title": entry.get('title', 'NO TITLE'),
             "summary": entry.get('summary','NO SUMMARY'),
-            "content": entry.get('content', 'NO CONTENT'),
+            "content": (entry.get('content', [{}])[0].get('value', '') or article.get('summary', 'NO CONTENT'))[:3000],
             "link": entry.get('link', 'NO LINK')
         } 
         for source, entries in raw_articles.items()
