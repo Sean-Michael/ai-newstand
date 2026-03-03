@@ -10,6 +10,7 @@ import logging
 from datetime import datetime, timedelta, UTC
 from time import mktime
 import json
+import ollama
 
 MAX_REVISIONS = 3
 
@@ -27,23 +28,26 @@ def ingest_rss_feeds() -> dict:
     feeds = None
     with open("feeds.json", "r") as json_file:
         feeds = json.load(json_file)
-    daily_results = {}
+    results = {}
     for name, url in feeds.items():
         feed = feedparser.parse(url)
         for entry in feed.entries:
-            date = entry.get('published_parsed')
+            date = entry.get('published_parsed') or entry.get('updated_parsed')
             if date:
                 timestamp = mktime(date)
                 datetime_obj = datetime.fromtimestamp(timestamp, UTC)
                 if  datetime_obj > current_utc_time - timedelta(hours=24*7):
-                    daily_results[name] = entry
-        if daily_results.get(name) is not None:
-            logging.debug(f"Got {len(daily_results.get(name))} recent entries for {name}")    
-    return daily_results
+                    results[name] = entry
+        if results.get(name) is not None:
+            logging.debug(f"Got {len(results.get(name))} recent entries for {name}")    
+    return results
 
 
-def curator(raw_articles: str) -> str:
+def curator(raw_articles: dict) -> str:
     """Refine article results into best candidates"""
+    for entry in raw_articles.values():
+        logging.info(entry.get('summary'))
+
     curated_articles = None
     return curated_articles
 
