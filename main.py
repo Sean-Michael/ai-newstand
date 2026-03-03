@@ -10,7 +10,7 @@ Version:
 TODO:
 - [ ] Add timings to functions 
 - [ ] Add traces to all calls
-- [ ] Trim summaries to help token limits/truncation
+- [x] Trim summaries to help token limits/truncation
 - [ ] Speedup ingest_rss_feeds
 - [ ] Experiment tracking for different models/prompts
 - [ ] Map reduce for articles researcher needs to summarize them for the writer
@@ -26,7 +26,12 @@ import ollama
 
 RESEARCHER_MODEL = "qwen2.5:3b"
 MAX_REVISIONS = 3
-INTERESTS = ["AI", "ML", "MLOps", "AI Engineering", "DevOps", "Kubernetes", "NVIDIA", "LangChain", "Agents", "Anthropic", "Claude Code"]
+INTERESTS = [
+    "AI", "ML", "MLOps", "LLMOps", "Platform Engineering", "AI Engineering",
+    "DevOps", "Kubernetes", "NVIDIA", "LangChain", "Agents", "Anthropic", "Claude Code", "Codex",
+    "AMD", "Intel", "Hugging Face", "PyTorch", "Ollama", "vLLM", "MCP", "RAG", "vector databases",
+    "OpenAI", "Gemini", "Mistral", "Qwen", "Terraform", "ArgoCD", "GitOps"
+]
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 LOG_LEVEL = logging.DEBUG
@@ -85,7 +90,7 @@ def build_researcher_prompt(interests: list[str], articles: list[dict[str]]) -> 
             "summary": entry.summary,
             "link": entry.link
     
-    Please return the links to articles that you have selected based on the criteria. 
+    Please return the links to NO MORE THAN 10 articles that you have selected based on the criteria. 
     Return ONLY a JSON array of selected article links, nothing else. Example format:
 ["https://...", "https://..."]
     
@@ -96,7 +101,7 @@ def build_researcher_prompt(interests: list[str], articles: list[dict[str]]) -> 
 
 
 def summarize_article(article: dict):
-    unpacked_content = article.get('content', [{}])[0].get('value', '') or article.get('summary', 'NO CONTENT')[:3000]
+    unpacked_content = (article.get('content', [{}])[0].get('value', '') or article.get('summary', 'NO CONTENT'))[:3000]
     system_prompt = "You are a precise newsletter researcher. Follow instructions exactly. Return only what is asked."
     user_prompt = f"Read the following article content and return ONLY a summary of what you read. ARTICLE: {unpacked_content}"
     response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, user_prompt)
@@ -140,6 +145,7 @@ def researcher(raw_articles: list[dict]) -> list[dict] | None:
         curated_links = json.loads(response.message.content)
         logging.debug(f"researcher links: {curated_links}")
         curated_articles = [a for a in trimmed if a.get('link') in curated_links]
+        logging.debug(f"curated_articles: {curated_articles}")
         
         summarized_articles = [summarize_article(a) for a in curated_articles]
         return summarized_articles
