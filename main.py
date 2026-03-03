@@ -5,14 +5,22 @@ Description: Agentic AI workflow for gathering RSS feed based content into a new
 Version:
 """
 
+
+"""
+TODO:
+- [ ] Add timings to functions
+- [ ] Add traces to all calls
+- [ ] Trim summaries to help token limits/truncation
+"""
+
 import feedparser
 import logging
 from datetime import datetime, timedelta, UTC
 from time import mktime
 import json
 import ollama
-from typing import List
 
+MODEL = "qwen3.5:9b"
 MAX_REVISIONS = 3
 INTERESTS = ["AI", "ML", "MLOps", "AI Engineering", "DevOps", "Kubernetes", "NVIDIA", "LangChain", "Agents", "Anthropic", "Claude Code"]
 
@@ -22,20 +30,32 @@ LOG_LEVEL = logging.DEBUG
 logging.basicConfig(format=FORMAT,level=LOG_LEVEL)
 
 current_utc_time = datetime.now(UTC)
-logging.info(f"Curren UTC time {current_utc_time}")
+logging.info(f"Current UTC time {current_utc_time}")
 
-def build_curator_prompt(interests: List[str]) -> str:
+def build_curator_prompt(interests: list[str], articles: list[dict[str]]) -> str:
     prompt = f"""You are a curator of news stories for an AI / ML Ops professional interested in the following topics: {interests}. 
     Specifically focus on new technology or product releases, workflows, techniques, or otherwise 'technical' content rather than social or political.
-    Given a list of article sources and titles, please return only the exact source and titles that fulfill the criteria."""
-
+    Given a list of articles in the following format:
+            "source": source,
+            "title": entry.title,
+            "summary": entry.summary,
+            "link": entry.link
+    
+    Please return the links to articles that you have selected based on the criteria. 
+    Return ONLY a JSON array of selected article links, nothing else. Example format:
+["https://...", "https://..."]
+    
+    ARTICLES:
+    {articles}
+    """
     return prompt
 
-def chat_with_article(model_name: str, prompt:str, article: dict, history: str | None) -> dict | None:
-    """Sends a chat to a model with article as context and a prompt and optional history"""
-    message = prompt + article + 
-    ollama.chat(model=model_name, messages=message)
-
+def chat_with_ollama(model_name: str, prompt:str) -> dict | None:
+    """Sends a chat to a model with a prompt"""
+    message = [{"role": "system", "content": prompt}]
+    response = ollama.chat(model=model_name, messages=message)
+    logging.debug(f"Response from Ollama: {response}")
+    return response
 
 
 def ingest_rss_feeds() -> dict:
@@ -62,12 +82,26 @@ def ingest_rss_feeds() -> dict:
 
 def curator(raw_articles: dict) -> str:
     """Refine article results into best candidates"""
-    for source, entries in raw_articles.items():
-        for entry in entries:
-            logging.info(f"Curator reading {source} article: {entry.get('title')}")
+    trimmed = [
+        {
+            "source": source,
+            "title": entry.get('title', 'NO TITLE'),
+            "summary": entry.get('summary','NO SUMMARY'),
+            "link": entry.get('link', 'NO LINK')
+        } 
+        for source, entries in raw_articles.items()
+        for entry in entries 
+    ]
+    curator_prompt = build_curator_prompt(INTERESTS, json.dumps(trimmed))
+    #logging.debug(f"Curator Prompt: {curator_prompt}")
+    response = ""
+    try:
+        response = chat_with_ollama(MODEL, curator_prompt)
+    except Exception as e:
+        logging.error(f"Caught Exception: {e}")
 
-    curator_prompt = build_curator_prompt(INTERESTS)
-
+    logging.info(response)
+        
 
     curated_articles = None
     return curated_articles
