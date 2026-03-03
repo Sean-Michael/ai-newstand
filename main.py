@@ -21,7 +21,7 @@ from time import mktime
 import json
 import ollama
 
-MODEL = "qwen3.5:9b"
+CURATOR_MODEL = "qwen2.5:3b"
 MAX_REVISIONS = 3
 INTERESTS = ["AI", "ML", "MLOps", "AI Engineering", "DevOps", "Kubernetes", "NVIDIA", "LangChain", "Agents", "Anthropic", "Claude Code"]
 
@@ -107,7 +107,7 @@ def curator(raw_articles: dict) -> str:
     #logging.debug(f"Curator Prompt: {curator_prompt}")
     response = ""
     try:
-        response = chat_with_ollama(MODEL, system_prompt, curator_prompt)
+        response = chat_with_ollama(CURATOR_MODEL, system_prompt, curator_prompt)
     except Exception as e:
         logging.error(f"Caught Exception: {e}")
 
