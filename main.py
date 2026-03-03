@@ -1,16 +1,24 @@
+"""
+File: main.py
+Author: Sean-Michael Riesterer
+Description: Agentic AI workflow for gathering RSS feed based content into a newsfeed.
+Version:
+"""
+
 import feedparser
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
+from time import mktime
 
 MAX_REVISIONS = 3
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 
 logging.basicConfig(format=FORMAT,level=LOG_LEVEL)
 
-current_datetime = datetime.now()
-logging.info(f"Got current_datetime of {current_datetime}")
+current_utc_time = datetime.now(UTC)
+logging.info(f"Curren UTC time {current_utc_time}")
 
 
 def ingest_rss_feeds():
@@ -19,12 +27,23 @@ def ingest_rss_feeds():
         'Docker Blog': 'https://www.docker.com/blog/feed/',
         'Hugging Face Blog': 'https://huggingface.co/blog/feed.xml',
     }
+    daily_results = {}
     for name, url in feed_urls.items():
         feed = feedparser.parse(url)
         logging.info(f"Feed Title: {feed.feed.title}")
         logging.info(f"Feed Link: {feed.feed.link}")
-        if feed.published < current_datetime - timedelta(hours=24)
+        for entry in feed.entries:
+            #logging.debug(f"Processing entry: {entry.title}...")
+            date = entry.get('published_parsed')
+            if date:
+                timestamp = mktime(date)
+                datetime_obj = datetime.fromtimestamp(timestamp, UTC)
+                logging.debug(datetime_obj)
+                if  datetime_obj > current_utc_time - timedelta(hours=100):
+                    daily_results[name] = entry
+                    logging.debug(f"Got {len(daily_results[name])} recent entries for {name}")
 
+            
     articles = None
     return articles
 
@@ -43,7 +62,8 @@ def writer(curated_articles: str, feedback:str | None) -> str:
 
 def editor(draft: str) -> str:
     """Take draft newsletter and provide feedback, if no edits, return LGTM!"""
-    feedback = None
+    feedback = "LGTM"
+    logging.info("Editor approved the draft, print it!")
     return feedback
 
 
@@ -72,6 +92,7 @@ def main():
             ready_to_publish = True
             final = draft
         revisions += 1
+    logging.info(f"Agent loop finished in {revisions} iterations.")
 
 
 if __name__ == "__main__":
