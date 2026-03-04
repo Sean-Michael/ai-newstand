@@ -25,10 +25,11 @@ import json
 import re
 import ollama
 from zoneinfo import ZoneInfo
+from concurrent.futures import ThreadPoolExecutor
 
-RESEARCHER_MODEL = "qwen2.5:3b"
-WRITER_MODEL = "mistral:7b-instruct-v0.3-q8_0"
-EDITOR_MODEL = "mistral:7b-instruct-v0.3-q8_0"
+RESEARCHER_MODEL = "qwen3.5:4b"
+WRITER_MODEL = "qwen3.5:4b"
+EDITOR_MODEL = "qwen3.5:4b"
 MAX_REVISIONS = 3
 TIMEFRAME_HOURS = 24
 INTERESTS = [
@@ -167,7 +168,9 @@ def researcher(raw_articles: list[dict]) -> list[dict] | None:
         logging.debug(f"curated_articles: {curated_articles}")
         logging.info(f"Researcher curated {len(curated_articles)} articles")
         
-        summarized_articles = [summarize_article(a) for a in curated_articles]
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            summarized_articles = list(executor.map(summarize_article, curated_articles))
         logging.info(f"Researcher summarized {len(summarized_articles)} articles")
         return summarized_articles
     except Exception as e:
@@ -203,13 +206,10 @@ def writer(articles: str, previous_draft:str | None, feedback:str | None) -> str
 
         ## ⚡ Quick Hits
         ### [Title](link) — Source
-        3-4 sentences of actual substance. No filler phrases like "in this article 
+        1 - 2 paragraphs of actual substance. No filler phrases like "in this article 
         the author discusses". Just the information.
 
         (repeat for each article)
-
-        ---
-        *[article count] stories • {date}*
 
         Rules:
         - Only use articles from the provided list, do not invent stories
@@ -237,14 +237,18 @@ def writer(articles: str, previous_draft:str | None, feedback:str | None) -> str
 
 def editor(draft: str) -> str:
     """Take draft newsletter and provide feedback, if no edits, return LGTM!"""
+    now_pacific = datetime.now(ZoneInfo("America/Los_Angeles"))
+    pacific_string_formatted = now_pacific.strftime("%Y-%m-%d")
+
     system_prompt = """
         You are editing a personal technical digest. Respond with LGTM if the draft 
         is solid. Otherwise give specific actionable feedback only — no examples, 
         no rewrites, just clear instructions for the writer.
     """
     user_prompt = f"""
+        Today's date is {pacific_string_formatted}
         Review this newsletter draft for a DevOps/MLOps engineer. Check:
-        - Does every story have a markdown link?
+        - Does every story have a markdown link? Do not fact check URL content just that they exist.
         - Is the Story of the Day substantively deeper than the Quick Hits?
         - Are there any filler phrases like "in this article the author discusses"?
         - Does any story appear to be invented rather than sourced from real content?
@@ -294,9 +298,18 @@ def main():
             final = draft
             logging.info("Editor approved the draft, print it!")
         revisions += 1
-    final = draft
+    final = final or draft
     logging.info(f"Agent loop finished in {revisions} iterations.")
-    write_newsletter(final)
+
+    metadata = f"""
+    ## Meet your writing team!
+    
+    Researcher: {RESEARCHER_MODEL}
+    Writer: {WRITER_MODEL}
+    Editor: {EDITOR_MODEL}
+    """
+    final_copy = final + metadata
+    write_newsletter(final_copy)
 
 
 if __name__ == "__main__":
