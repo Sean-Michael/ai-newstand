@@ -16,6 +16,8 @@ TODO:
 - [ ] Map reduce for articles researcher needs to summarize them for the writer
 - [ ] Refactor ingest_rss_feeds to return a list[dict] directly instead of dict[str, list]
 - [ ] DRY
+- [ ] Logging to file and formatted
+- [ ] Pull in system logs with some orchestrator script or something like journalctl ollama and nvidia
 """
 
 import feedparser
@@ -30,6 +32,7 @@ from zoneinfo import ZoneInfo
 RESEARCHER_MODEL = "qwen3.5:9b"
 WRITER_MODEL = "qwen3.5:9b"
 EDITOR_MODEL = "qwen3.5:9b"
+NUM_CTX = 32768
 MAX_REVISIONS = 3
 TIMEFRAME_HOURS = 24
 INTERESTS = [
@@ -40,7 +43,7 @@ INTERESTS = [
 ]
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 
 logging.basicConfig(format=FORMAT,level=LOG_LEVEL)
 
@@ -48,7 +51,7 @@ current_utc_time = datetime.now(UTC)
 logging.info(f"Current UTC time {current_utc_time}")
 
 
-def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:bool = False) -> dict | None:
+def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:bool = False, options={"num_ctx":NUM_CTX}) -> dict[str] | None:
     """Sends a chat to a model with a prompt"""
     message = [
         {
@@ -60,7 +63,7 @@ def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:
             "content": user_prompt
         }
     ]
-    response = ollama.chat(model=model_name, messages=message, think=think)
+    response = ollama.chat(model=model_name, messages=message, think=think, options=options)
     logging.debug(f"Response from Ollama: {response}")
     return response
 
@@ -216,7 +219,7 @@ def writer(articles: str, previous_draft:str | None, feedback:str | None) -> str
 
         Rules:
         - Only use articles from the provided list, do not invent stories
-        - Every title must be a markdown link
+        - Every title must be a markdown link of the exac format: [Title](link) for proper hyperlink
         - No marketing language or filler phrases
         - If an article has thin content, keep it short rather than padding it
 
@@ -251,7 +254,7 @@ def editor(draft: str) -> str:
     user_prompt = f"""
         Today's date is {pacific_string_formatted}
         Review this newsletter draft for a DevOps/MLOps engineer. Check:
-        - Does every story have a markdown link? Do not fact check URL content just that they exist.
+        - Does every story have a markdown link? Do not fact check URL content just that they exist and are of the correct format (Link Text)[Linke URL]
         - Is the Story of the Day substantively deeper than the Quick Hits?
         - Are there any filler phrases like "in this article the author discusses"?
         - Does any story appear to be invented rather than sourced from real content?
@@ -292,6 +295,8 @@ def main():
     revisions = 0
     raw_articles = ingest_rss_feeds()
     curated_articles = researcher(raw_articles)
+    if not curated_articles:
+        logging.error(f"Researcher returned no articles - or no valid JSON, got: {curated_articles}")
     logging.info(f"Passing {len(curated_articles)} articles to writer: {[a['source'] + ' - ' + a['title'][:40] for a in curated_articles]}")
     while not ready_to_publish and revisions < MAX_REVISIONS:
         draft = writer(curated_articles, draft, feedback)
