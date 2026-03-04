@@ -15,6 +15,7 @@ TODO:
 - [ ] Experiment tracking for different models/prompts
 - [ ] Map reduce for articles researcher needs to summarize them for the writer
 - [ ] Refactor ingest_rss_feeds to return a list[dict] directly instead of dict[str, list]
+- [ ] DRY
 """
 
 import feedparser
@@ -26,9 +27,9 @@ import re
 import ollama
 from zoneinfo import ZoneInfo
 
-RESEARCHER_MODEL = "qwen3.5:2b"
-WRITER_MODEL = "qwen3.5:2b"
-EDITOR_MODEL = "qwen3.5:2b"
+RESEARCHER_MODEL = "qwen3.5:9b"
+WRITER_MODEL = "qwen3.5:9b"
+EDITOR_MODEL = "qwen3.5:9b"
 MAX_REVISIONS = 3
 TIMEFRAME_HOURS = 24
 INTERESTS = [
@@ -47,7 +48,7 @@ current_utc_time = datetime.now(UTC)
 logging.info(f"Current UTC time {current_utc_time}")
 
 
-def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str) -> dict | None:
+def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:bool = False) -> dict | None:
     """Sends a chat to a model with a prompt"""
     message = [
         {
@@ -59,7 +60,7 @@ def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str) -> dic
             "content": user_prompt
         }
     ]
-    response = ollama.chat(model=model_name, messages=message)
+    response = ollama.chat(model=model_name, messages=message, think=think)
     logging.debug(f"Response from Ollama: {response}")
     return response
 
@@ -123,7 +124,7 @@ def summarize_article(article: dict):
         ARTICLE: 
         {re.sub(r'<[^>]+>', '', article.get('content'))}
     """
-    response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, user_prompt)
+    response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, user_prompt, think=False)
 
     summary = response.message.content
     logging.debug(f"Summary of {article.get('title')}\n\t{summary}")
@@ -139,6 +140,7 @@ def summarize_article(article: dict):
 
 def researcher(raw_articles: list[dict]) -> list[dict] | None:
     """Refine article results into best candidates"""
+    logging.info(f"Ingested {sum(len(v) for v in raw_articles.values())} total articles from {len(raw_articles)} feeds")
     trimmed = [
         {
             "source": source,
@@ -156,12 +158,13 @@ def researcher(raw_articles: list[dict]) -> list[dict] | None:
     system_prompt = "You are a precise newsletter researcher. Follow instructions exactly. Return only what is asked."
     response = ""
     try:
-        response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, researcher_prompt)
+        response = chat_with_ollama(RESEARCHER_MODEL, system_prompt, researcher_prompt, think=False)
     except Exception as e:
         logging.error(f"Caught Exception: {e}")
 
     try: 
         curated_links = list(set(json.loads(response.message.content)))
+        logging.info(f"Researcher selected {len(curated_links)} unique links")
         logging.debug(f"researcher links: {curated_links}")
         curated_articles = [a for a in trimmed if a.get('link') in curated_links]
         logging.debug(f"curated_articles: {curated_articles}")
@@ -170,6 +173,7 @@ def researcher(raw_articles: list[dict]) -> list[dict] | None:
 
         summarized_articles = [summarize_article(a) for a in curated_articles]
         logging.info(f"Researcher summarized {len(summarized_articles)} articles")
+        logging.info(f"Article sources: {[a['source'] for a in summarized_articles]}")
         return summarized_articles
     except Exception as e:
         logging.error(f"Caught exception: {e}")
@@ -228,7 +232,7 @@ def writer(articles: str, previous_draft:str | None, feedback:str | None) -> str
         Return ONLY the markdown.
     """
 
-    response = chat_with_ollama(WRITER_MODEL, system_prompt, user_prompt)
+    response = chat_with_ollama(WRITER_MODEL, system_prompt, user_prompt, think=False)
     newsletter = response.message.content
     logging.info(f"Newsletter draft: {newsletter}")
     return newsletter
@@ -259,7 +263,7 @@ def editor(draft: str) -> str:
         {draft}
     """
 
-    response = chat_with_ollama(EDITOR_MODEL, system_prompt, user_prompt)
+    response = chat_with_ollama(EDITOR_MODEL, system_prompt, user_prompt, think=False)
     feedback = response.message.content
     logging.info(f"Editor feedback: {feedback}")
 
@@ -288,7 +292,7 @@ def main():
     revisions = 0
     raw_articles = ingest_rss_feeds()
     curated_articles = researcher(raw_articles)
-
+    logging.info(f"Passing {len(curated_articles)} articles to writer: {[a['source'] + ' - ' + a['title'][:40] for a in curated_articles]}")
     while not ready_to_publish and revisions < MAX_REVISIONS:
         draft = writer(curated_articles, draft, feedback)
         feedback = editor(draft)
