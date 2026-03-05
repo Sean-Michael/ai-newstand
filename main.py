@@ -306,19 +306,46 @@ def upload_file(file_name, bucket, object_name=None):
     return True
 
 
+def extract_title(newsletter_md: str) -> str:
+    """Extract the H1 title from the newsletter markdown."""
+    for line in newsletter_md.splitlines():
+        line = line.strip()
+        if line.startswith("# "):
+            return line.lstrip("# ").strip()
+    return "AI Newsletter"
+
+
+def make_slug(title: str) -> str:
+    """Convert a title to a URL-friendly slug."""
+    slug = title.lower()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'[\s]+', '-', slug).strip('-')
+    return slug
+
+
 def write_newsletter(final: str) -> None:
     """
-    Save a dated article with a generated title to S3
-    On failure, write to a local file for backup.
+    Add frontmatter, save locally, and upload to S3.
     """
     now_pacific = datetime.now(ZoneInfo("America/Los_Angeles"))
-    pacific_string_formatted = now_pacific.strftime("%Y-%m-%d")
-    filename = pacific_string_formatted + "-Newsletter.md"
+    date_str = now_pacific.strftime("%Y-%m-%d")
+
+    title = extract_title(final)
+    slug = make_slug(title)
+
+    frontmatter = f"""---
+title: "{title}"
+date: {date_str}
+---
+"""
+    full_content = frontmatter + final
+    filename = slug + ".md"
+
     with open(filename, "w") as file:
-        written = file.write(final)
+        written = file.write(full_content)
     if written > 0:
         object_name = "digests/" + filename
-        uploaded = upload_file(filename,S3_CONTENT_BUCKET,object_name)
+        uploaded = upload_file(filename, S3_CONTENT_BUCKET, object_name)
         if uploaded:
             logging.info(f"Uploaded {object_name} to s3://{S3_CONTENT_BUCKET}")
         else:
@@ -326,8 +353,6 @@ def write_newsletter(final: str) -> None:
     else:
         logging.error("Wrote an empty file, no upload to s3..")
         exit(1)
-        
-    return
 
 
 def main():
