@@ -2,6 +2,8 @@
 
 Daily newsletters on AI/ML/DevOps topics from k8s to Agentic Workflows!
 
+> These are now available to view on my website! https://sean-michael.dev/digest
+
 Inspired by a comment Addy Osmani made in his recent chat with Tim O'Reilly on agentic AI systems, where he proposed one could create an AI Agent to stay on top of all the latest innovations in the space.
 
 I thought this was very apt because I would like to experiment with agentic systems more AND I find that I struggle with FOMO whenever new technologies come around.
