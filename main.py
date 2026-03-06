@@ -231,6 +231,7 @@ def writer(articles: str, previous_draft:str | None, feedback:str | None) -> str
         - Every title must be a markdown link of the exac format: [Title](link) for proper hyperlink
         - No marketing language or filler phrases
         - If an article has thin content, keep it short rather than padding it
+        - For title links, enclose the link text in square brackets [] and immediately follow it with the URL in parentheses ()
 
         ARTICLES:
         {articles}
@@ -263,7 +264,8 @@ def editor(draft: str) -> str:
     user_prompt = f"""
         Today's date is {pacific_string_formatted}
         Review this newsletter draft for a DevOps/MLOps engineer. Check:
-        - Does every story have a markdown link? Do not fact check URL content just that they exist and are of the correct format (Link Text)[Linke URL]
+        - Does every story have a markdown link? Do not fact check URL content just that they exist and are of the correct format 
+        - Links should be in this format for proper MD hyperlink (LINK_TEXT)[URL]
         - Is the Story of the Day substantively deeper than the Quick Hits?
         - Are there any filler phrases like "in this article the author discusses"?
         - Does any story appear to be invented rather than sourced from real content?
