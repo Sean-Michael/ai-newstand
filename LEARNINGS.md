@@ -69,6 +69,8 @@ I really need to get MLFlow cooking and the runs of this automated so I can do s
 
 ## 3/8/26
 
+I've had a crontab for this guy in my homelab PC for a couple of days now.. I really need to set up logging to a file ..
+
 The issues with the link format seem to be somewhat transient, not sure exactly where in the process the formatting is getting dropped. Perhaps I need to just write some strict post-processing formatter that does some regex to fix the output. 
 
 Also, it seems that despite instructions the writer is selecting articles with almost no substance in their content. The solution here is two-fold:
