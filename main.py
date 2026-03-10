@@ -18,23 +18,29 @@ TODO:
 - [ ] DRY
 - [ ] Logging to file and formatted
 - [ ] Pull in system logs with some orchestrator script or something like journalctl ollama and nvidia
+- [ ] Change environment vars to click CLI options
 """
 
 import feedparser
 import logging
 from datetime import datetime, timedelta, UTC
-from time import mktime
+from time import mktime, perf_counter
 import json
 import re
-import ollama
+from ollama import chat, ChatResponse
 from zoneinfo import ZoneInfo
 import boto3
 from pathlib import Path
 from botocore.exceptions import ClientError
 import os
 
+
+BASE_PATH = Path(__file__)
+DRAFT_DIR = os.path.join(BASE_PATH, 'drafts')
+DIGEST_DIR = os.path.join(BASE_PATH, 'digests')
+
 # Boolean to control wether or not the generated newsletter is 'published' by uploading to s3
-PUBLISH = True
+PUBLISH = False
 
 DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
 
@@ -64,7 +70,7 @@ current_utc_time = datetime.now(UTC)
 logging.info(f"Current UTC time {current_utc_time}")
 
 
-def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:bool = False, options={"num_ctx":NUM_CTX}) -> dict[str] | None:
+def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:bool = False, options={"num_ctx":NUM_CTX}) -> ChatResponse:
     """Sends a chat to a model with a prompt"""
     message = [
         {
@@ -76,8 +82,11 @@ def chat_with_ollama(model_name: str, system_prompt:str, user_prompt:str, think:
             "content": user_prompt
         }
     ]
-    response = ollama.chat(model=model_name, messages=message, think=think, options=options)
+    start = perf_counter()
+    response = chat(model=model_name, messages=message, think=think, options=options)
+    finish = perf_counter()
     logging.debug(f"Response from Ollama: {response}")
+    logging.info(f"Chat finished in {finish - start}s")
     return response
 
 
@@ -88,6 +97,9 @@ def ingest_rss_feeds() -> dict:
     with open("feeds.json", "r") as json_file:
         feeds = json.load(json_file)
     results = {}
+
+
+    start = perf_counter()
     for name, url in feeds.items():
         results[name] = []
         feed = feedparser.parse(url)
@@ -99,7 +111,9 @@ def ingest_rss_feeds() -> dict:
                 if  datetime_obj > current_utc_time - timedelta(hours=TIMEFRAME_HOURS):
                     results[name].append(entry)
         if results.get(name, []):
-            logging.debug(f"Got {len(results.get(name))} recent entries for {name}")    
+            logging.debug(f"Got {len(results.get(name))} recent entries for {name}") 
+    end = perf_counter()
+    logging.info(f"RSS parser finished in {end - start}s")   
     return results
 
 
@@ -259,7 +273,10 @@ def editor(draft: str) -> str:
     system_prompt = """
         You are editing a personal technical digest. Respond with LGTM if the draft 
         is solid. Otherwise give specific actionable feedback only — no examples, 
-        no rewrites, just clear instructions for the writer.
+        no rewrites, just clear instructions for the writer. 
+        
+        Do NOT include 'LGTM' anywhere in your response if you have feedback. 
+        Only respond with LGTM if the draft is ready to print.
     """
     user_prompt = f"""
         Today's date is {DATE_STR}
@@ -271,7 +288,7 @@ def editor(draft: str) -> str:
         - Does any story appear to be invented rather than sourced from real content?
         - Is it worth reading over morning coffee?
 
-        Respond with LGTM or specific feedback only.
+        Respond with LGTM or specific feedback only. Do not mix 'LGTM' in with feedback.
 
         DRAFT:
         {draft}
@@ -339,7 +356,7 @@ date: {DATE_STR}
 ---
 """
     full_content = frontmatter + final
-    filename = slug + ".md"
+    filename = DIGEST_DIR + slug + ".md"
 
     with open(filename, "w") as file:
         written = file.write(full_content)
@@ -357,32 +374,46 @@ date: {DATE_STR}
 
 def main():
     """Main execution loop"""
+    start_main = perf_counter()
     ready_to_publish = False
     final = ""
     draft = ""
     feedback = ""
     revisions = 0
-    base_filename = DATE_STR + '_rev-'
-    raw_articles = ingest_rss_feeds()
+    base_filename = DRAFT_DIR + DATE_STR
+
+    raw_articles = ingest_rss_feeds()    
     curated_articles = researcher(raw_articles)
+    
     if not curated_articles:
         logging.error(f"Researcher returned no articles - or no valid JSON, got: {curated_articles}")
         return
     logging.info(f"Passing {len(curated_articles)} articles to writer: {[a['source'] + ' - ' + a['title'][:40] for a in curated_articles]}")
+    
     while not ready_to_publish and revisions < MAX_REVISIONS:
+        start_revision = perf_counter()
         draft = writer(curated_articles, draft, feedback)
-        draft_filename = 'draft-' + base_filename + str(revisions)
+        draft_filename = base_filename + 'draft-' + str(revisions)
+        
         with open(draft_filename, "w") as draft_file:
             draft_file.write(draft)
         feedback = editor(draft)
-        edit_filename = 'edits-' + base_filename + str(revisions)
+        edit_filename = base_filename + 'edits-' + str(revisions)
+        
         with open(edit_filename, "w") as edit_file:
             edit_file.write(feedback)
+        
         if feedback.strip() == "LGTM":
             ready_to_publish = True
             final = draft
+            end_revision = perf_counter()
+            logging.info(f"Editorial loop {revisions} finished in {end_revision - start_revision}s")
             logging.info("Editor approved the draft, print it!")
+        
         revisions += 1
+        end_revision = perf_counter()
+        logging.info(f"Editorial loop {revisions} finished in {end_revision - start_revision}s")
+    
     final = final or draft
     logging.info(f"Agent loop finished in {revisions} iterations.")
 
@@ -393,6 +424,9 @@ def main():
 """
     final_copy = final + metadata
     write_newsletter(final_copy)
+
+    end_main = perf_counter()
+    logging.info(f"Finished main execution in {end_main - start_main}s")
 
 
 if __name__ == "__main__":
