@@ -35,14 +35,18 @@ from botocore.exceptions import ClientError
 import os
 
 
-BASE_PATH = Path(__file__)
-DRAFT_DIR = os.path.join(BASE_PATH, 'drafts')
-DIGEST_DIR = os.path.join(BASE_PATH, 'digests')
+DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+
+BASE_PATH = Path(__file__).parent
+DRAFT_DIR = os.path.join(BASE_PATH, 'drafts', DATE_STR + '/')
+DIGEST_DIR = os.path.join(BASE_PATH, 'digests/')
+
+for d in [DRAFT_DIR, DIGEST_DIR]:
+    os.makedirs(d, exist_ok=True)
 
 # Boolean to control wether or not the generated newsletter is 'published' by uploading to s3
 PUBLISH = False
 
-DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
 
 RESEARCHER_MODEL = "qwen3.5:9b"
 WRITER_MODEL = "qwen3.5:9b"
@@ -380,8 +384,6 @@ def main():
     draft = ""
     feedback = ""
     revisions = 0
-    base_filename = DRAFT_DIR + DATE_STR
-
     raw_articles = ingest_rss_feeds()    
     curated_articles = researcher(raw_articles)
     
@@ -393,12 +395,12 @@ def main():
     while not ready_to_publish and revisions < MAX_REVISIONS:
         start_revision = perf_counter()
         draft = writer(curated_articles, draft, feedback)
-        draft_filename = base_filename + 'draft-' + str(revisions)
+        draft_filename = DRAFT_DIR + 'draft-' + str(revisions)
         
         with open(draft_filename, "w") as draft_file:
             draft_file.write(draft)
         feedback = editor(draft)
-        edit_filename = base_filename + 'edits-' + str(revisions)
+        edit_filename = DRAFT_DIR + 'edits-' + str(revisions)
         
         with open(edit_filename, "w") as edit_file:
             edit_file.write(feedback)
