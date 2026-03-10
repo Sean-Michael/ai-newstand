@@ -1,0 +1,31 @@
+# AI Governance & Context Engineering | 2026-03-10
+
+## 🔥 Story of the Day
+### Announcing the AI Gateway Working Group — Kubernetes Blog
+The Kubernetes community has formally established the AI Gateway Working Group to define standards for networking infrastructure supporting AI workloads. This initiative addresses a critical gap in our tooling: moving away from reinventing networking layers from scratch toward leveraging the existing Gateway API specification enhanced for intelligent routing and guardrails. The core technical shift here is defining an "AI Gateway" not as a new product category, but as an evolution of standard gateway infrastructure capable of enforcing token-based rate limiting, fine-grained access controls, and deep payload inspection.
+
+For us building self-hosted ML pipelines, this is significant because it provides a composable architecture for layering AI-specific security controls directly onto proven networking foundations. The group's active proposals highlight **payload processing** as a key mechanism, enabling the inspection and transformation of full HTTP request and response payloads to prevent malicious prompts and stop injection attacks at the edge. By standardizing these capabilities, we can finally enforce anomaly detection and signature-based analysis without bloating our control plane with proprietary agents that lack portability.
+
+Additionally, related news from AWS highlights the General Availability of Policy in Amazon Bedrock AgentCore, which allows security teams to define controls outside an agent's codebase using natural language that automatically converts to Cedar. While this is specific to AWS, the parallel development of a Kubernetes-native standard suggests the industry consensus is shifting toward externalizing policy definitions to ensure compliance and isolation, whether we are running on managed services or bare metal.
+
+## ⚡ Quick Hits
+### Introducing Storage Buckets on the Hugging Face Hub — [Hugging Face Blog](https://huggingface.co/blog/storage-buckets)
+Storage buckets are now available on the Hub to simplify object storage management for model artifacts.
+
+### Granite 4.0 1B Speech: Compact, Multilingual, and Built for the Edge — [Hugging Face Blog](https://huggingface.co/blog/ibm-granite/granite-4-speech)
+IBM releases Granite 4.0 1B, a compact multilingual speech model optimized for edge deployment scenarios where latency and footprint are critical constraints.
+
+### AWS Weekly Roundup: Amazon Connect Health, Bedrock AgentCore Policy, GameDay Europe, and more (March 9, 2026) — [AWS News Blog - Artificial intelligence](https://aws.amazon.com/blogs/aws/aws-weekly-roundup-amazon-connect-health-bedrock-agentcore-policy-gameday-europe-and-more-march-9-2026/)
+AWS launched Amazon Connect Health as a General Availability GAA service featuring five HIPAA-eligible AI agents for clinical workflows. A key technical update is the GA of Policy in Bedrock AgentCore, enabling centralized enforcement of agent-tool interactions via natural language that converts to Cedar policies defined external to the agent's codebase. OpenClaw is also available on Lightsail for deploying autonomous private AI agents.
+
+### Anthropic launches a multi-agent code review tool for Claude Code — [The New Stack](https://thenewstack.io/anthropic-launches-a-multi-agent-code-review-tool-for-claude-code/)
+Anthropic introduced "Code Review" for Claude Code, a multi-agent system that deploys parallel agents to analyze pull requests automatically upon opening in the cloud. The tool focuses exclusively on catching logical bugs and suggesting fixes rather than styling checks, which minimizes false positives. It does not grant approval authority but provides actionable conclusions to reduce the verification overhead caused by agentic coding tools.
+
+### How context rot drags down AI and LLM results for enterprises, and how to fix it — [The New Stack](https://thenewstack.io/context-rot-enterprise-ai-llms/)
+"Context rot" occurs when unmanaged data accumulation causes attention budget saturation, leading models to become confused and lose reasoning capabilities. Simply adding fresh data without pruning outdated information dilutes results until the model's processing capacity is exhausted. This shifts operational priorities from passive data ingestion to active "context engineering," requiring the automatic pruning or filtering of irrelevant data to prevent saturation in agentic workflows.
+
+### Sustaining open source in the age of generative AI — [CNCF Blog](https://www.cncf.io/blog/2026/03/10/sustaining-open-source-in-the-age-of-generative-ai/)
+The Kyverno project has introduced an **AI Usage Policy** to address the bottleneck of human maintainers overwhelmed by AI-generated pull requests. While AI tools amplify productivity, the review bottleneck remains human cognition; every contribution still requires manual steps like security evaluation and long-term maintainability assessment. Future governance will likely enforce restrictions on auto-generated code or require specific metadata for AI-assisted contributions to preserve maintainer attention spans before human review becomes unmanageable.
+
+### mAIdAI: Building a Personal Assistant with Google Cloud and Vertex AI — [MLOps Community](https://mlops.community/maidai-building-a-personal-assistant-with-google-cloud-and-vertex-ai/)
+mAIdAI is architected to solve the "cobbler's children" problem by using Google Chat for interaction, Cloud Run for hosting, and Vertex AI for inference. The system structures interactions around three types: Context-Aware Chat using a personalized `context.md` file, Quick Commands for static values, and Slash Commands wrapping user input in templates. It reduces context-switching by answering micro-friction questions like syntax lookups directly within the chat interface without relying on generic enterprise bots.

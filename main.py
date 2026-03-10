@@ -8,7 +8,7 @@ Version:
 
 """
 TODO:
-- [ ] Add timings to functions 
+- [x] Add timings to functions 
 - [ ] Add traces to all calls
 - [x] Trim summaries to help token limits/truncation
 - [ ] Speedup ingest_rss_feeds

@@ -82,3 +82,9 @@ In fact getting the source material could be a parallelized step for each articl
 I think what I really need to do is start tracking each revision of the newsletter draft along with the feedback by writing it to a file. Then, I can add in some tracing with MLFlow and use those alongside the prompts and everything as an artifact, before I go significantly changing the system.
 
 Another idea I had is using a more powerful model like Claude periodically to provide feedback on the newsletter.. could be a good judge?
+
+# 3/10/26
+
+Added a local file saving so that the drafts and revisions from the editorial loop are captured for future artifact tracking. 
+
+I updated the prompts a bit so the Editor is better at just responding LGTM and not providining aditional feedback that gets ignored because of how i've constructed the loop. But it seems like it favors just doing one pass since the first iteration from qwen3.5 is actually quite good which I agree on but I wonder if I should add some revision count context awareness to the editor call? Like "this is your n-th revision, the max is k" and have it be more skeptical early on to increase the chance of more revisions?

@@ -1,32 +1,42 @@
-# Secure-by-Default AI Infrastructure | 2026-03-04
+# Storage Shifts & Agent Safety | 2026-03-04
 
 ## 🔥 Story of the Day
-### Agentic Engineering Patterns (https://simonwillison.net/guides/agentic-engineering-patterns/) — Hacker News - Best
+### The Data Stack Rewrite for AI Workloads — [The New Stack](https://thenewstack.io/data-intensive-applications-rewrite-2026/)
 
-Traditional agent orchestration often treats LLM interactions as isolated, stateless function calls where the model generates JSON objects with `action`, `tool`, and `input` fields. This approach fails in production because non-deterministic outputs from AI tools lead to infinite loops or silent failures when critical context—like partial results or specific error states—is lost between turns. The shift to agentic engineering patterns requires maintaining high-context state throughout the conversation, ensuring the model carries forward constraints and previous outcomes without requiring repetitive prompting.
-
-For DevOps engineers managing Kubernetes clusters hosting self-hosted LLMs, this architectural difference directly impacts operational overhead and system reliability. Stateless agents struggle with brittle workflows when facing unpredictable LLM behavior, necessitating complex external error-handling pipelines and manual intervention. In contrast, stateful agentic loops provide intrinsic observability; they track tool call success or failure before proceeding to the next step. This reduces the operational burden of debugging non-deterministic failures and accelerates recovery times within CI/CD pipelines, making it essential for maintaining stability in automated infrastructure-as-code workflows.
-
-### Aikido Security bets on AI to make software secure itself (https://thenewstack.io/aikido-self-securing-software/) — The New Stack
-The industry faces a critical misalignment between deployment velocity and security validation speed. While 76% of organizations deploy code weekly or faster, only 21% validate security on every release, creating a gap where 85% of leaders find that security findings are outdated before final reports arrive. Manual penetration testing is too slow to match the rate at which AI-generated code proliferates in modern development cycles. Aikido's Infinite solves this by integrating continuous AI-powered penetration testing directly into CI/CD pipelines, moving from reactive quarterly assessments to proactive, automated validation and patch generation.
-
-For MLOps teams building ML infrastructure on Kubernetes, this is a practical extension of "shift-left" security principles. The core challenge isn't just detecting vulnerabilities in static code, but validating the robustness of AI-generated components against adversarial inputs before they reach production. By automating this validation loop within the deployment pipeline rather than as a post-deployment audit, teams can ensure that complex model artifacts and infrastructure configurations remain secure without breaking the velocity enabled by automated tooling. This eliminates the bottleneck where human review cannot keep pace with rapid AI-assisted iteration cycles.
+Martin Kleppmann is updating *Designing Data-Intensive Applications* to reflect a paradigm shift where object storage serves as the first-class building block for modern AI architectures, moving beyond decade-old block-storage models. The new edition explicitly addresses how distributed query engines and specialized indexing strategies must integrate with these object-centric backends to satisfy low-latency requirements inherent in large-scale inference pipelines. This architectural pivot recognizes that traditional replication and sharding mechanisms alone are insufficient for the massive, unstructured datasets driving contemporary LLMs, necessitating a re-evaluation of fundamental storage concepts for AI workloads.
 
 ## ⚡ Quick Hits
-### Evaluating Theory of Mind and Internal Beliefs in LLM-Based Multi-Agent Systems (https://arxiv.org/abs/2603.00142) — Hacker News - LLM
-**Content Status:** The provided source material contains no actual text, abstract, or body of the paper to analyze. The arXiv ID `2603.00142` references a future date (2026), suggesting it is either a placeholder, hypothetical reference, or inaccessible content at this time. Without the full technical content, no concrete insights, metrics, or architectural trade-offs regarding LLM-based multi-agent systems can be extracted.
+### Scaling organizational structure with Meshery's expanding ecosystem — [CNCF Blog](https://www.cncf.io/blog/2026/03/04/scaling-organizational-structure-with-mesherys-expanding-ecosystem/)
 
-### Qwen3.5 Fine-Tuning Guide – Unsloth Documentation (https://unsloth.ai/docs/models/qwen3.5/fine-tune) — Y Combinator
-**Content Status:** The source provides only the word "Comments" and lacks definition, technical announcements, metrics, or infrastructure context regarding Qwen3.5 fine-tuning. No specific details on quantization techniques, memory optimization strategies, or Kubernetes resource requirements can be summarized from this insufficient input.
+Meshery is splitting its GitHub presence into `github.com/meshery` for core platform components like the Operator and MeshSync, and `github.com/meshery-extensions` for the 300+ integrations. This architectural modularity isolates critical infrastructure stability from community-driven adapter development, preventing permission complexity in a single repo from stalling releases on essential MLOps tooling.
 
-### MLOps Coding Skills: Bridging the Gap Between Specs and Agents (https://mlops.community/mlops-coding-skills-bridging-the-gap-between-specs-and-agents/) — MLOps Community
-**Agent Skills** introduce a lightweight framework to bridge the gap between rigid theoretical specifications and practical AI agent behavior. Standard tools like the Model Context Protocol (MCP) provide necessary API access ("hands") but lack domain specificity for engineering constraints. Agent Skills act as the missing "brain," enabling agents to understand context-specific rules, such as preferring `uv` over `poetry` or adhering to team code standards. This allows for deterministic execution of production-grade MLOps tasks without manual reconfiguration for every project's unique stack, solving the friction between generic tooling and specific infrastructure requirements.
+### Confluent adds A2A support, anomaly detection, and Queues for Kafka in major platform update — [The New Stack](https://thenewstack.io/confluent-kafka-a2a-agents/)
 
-### PRX Part 3 — Training a Text-to-Image Model in 24h! (https://huggingface.co/blog/Photoroom/prx-part3) — Hugging Face Blog
-**Content Status:** The provided input is empty and contains no text to summarize regarding AI model training, infrastructure setups, or performance metrics. No technical insights can be extracted without the actual article content.
+Confluent now supports the open Agent2Agent (A2A) protocol via a new KIP, enabling Apache Kafka to orchestrate inter-agent communication and store interactions for real-time auditability. This update allows "Streaming Agents" to trigger asynchronous actions based on data state changes, transforming event-driven systems capable of identifying critical business moments using multivariate anomaly detection without locking teams into proprietary agent frameworks.
 
-### Agentic Engineering Patterns (https://simonwillison.net/guides/agentic-engineering-patterns/) — Y Combinator
-**Content Status:** The source provided is insufficient, containing only the word "Comments" and no substantive text regarding agentic engineering patterns or related technical details. No information can be summarized from this input.
+### Google launches Gemini 3.1 Flash-Lite, its fastest Gemini 3 model yet — [The New Stack](https://thenewstack.io/google-gemini-3-1-flash-lite/)
+
+Google released Gemini 3.1 Flash-Lite with a multimodal capability scoring 1432 Elo points on the Arena.ai Leaderboard and throughput up to 363 tokens per second. Despite a higher API price of $0.25/$1.50 per million tokens compared to the previous iteration, this model bridges the gap between slow legacy options and premium tiers, offering a cost-efficient inference path for scaling workloads.
+
+### Show HN: ÆTHERYA Core – deterministic policy engine for governing LLM actions — [Hacker News - LLM](https://github.com/nayfly/aetherya-core)
+
+The project implements fail-closed execution and signed out-of-band approval proofs to ensure irreversible actions are never taken without human verification. The CLI demo specifically shows how the system denies and audits actions before they proceed, providing a verifiable audit chain necessary for safely integrating self-hosted AI agents into operational workflows with strict governance boundaries.
+
+### Where did my 128GB of video RAM go? AMD GPU BIOS gotcha for LLM builders — [Hacker News - LLM](https://patrickmccanna.net/allocating-ram-for-gpu-performance-on-self-hosted-llm-systems-with-integrated-system-gpu-ram/)
+
+Enabling `MemorySharing=on` in systemd-logind and configuring the BIOS "Shared Memory" option allows integrated GPUs to utilize system RAM as VRAM via dynamic memory sharing. This setup permits an iGPU to access up to 12GB of system RAM for models like Llama-2-7B, effectively bypassing physical video memory constraints on commodity hardware where buying dedicated GPU cards is impractical.
+
+### MLOps Coding Skills: Bridging the Gap Between Specs and Agents — [MLOps Community](https://mlops.community/mlops-coding-skills-bridging-the-gap-between-specs-and-agents/)
+
+"Agent Skills" offers a lightweight, opinionated middle ground between rigid specification systems like spec-kit and generic context protocols like MCP. It solves the problem where generic tools lack awareness of team-specific constraints—such as preferring `uv` over `poetry` or using plain files—by providing both flexibility and necessary "brain" for specific operational contexts in production-grade environments.
+
+### OpenAI's GPT-5.3 Instant promises to dial down the cringe — [The New Stack](https://thenewstack.io/openai-gpt-5-1-instant/)
+
+OpenAI launched GPT-5.3 Instant as a high-speed workhorse that reduces hallucinations and curbs excessive guardrails previously causing defensive refusals or moralizing preambles. The model balances external web search results with internal reasoning to avoid over-indexing on external data, improving natural conversation flow for engineers managing low-latency requirements where frequent model refusals degrade throughput.
+
+### PRX Part 3 — Training a Text-to-Image Model in 24h! — [Hugging Face Blog](https://huggingface.co/blog/Photoroom/prx-part3)
+
+This post outlines a workflow for training a text-to-image model within a 24-hour window, demonstrating how rapid iteration cycles can be applied to generative model development using optimized pipelines and efficient resource allocation strategies.
 
 ---
-*Researcher: qwen3.5:4b • Writer: qwen3.5:4b • Editor: qwen3.5:4b*
+*Researcher: qwen3.5:9b • Writer: qwen3.5:9b • Editor: qwen3.5:9b*
