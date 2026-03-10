@@ -372,6 +372,9 @@ date: {DATE_STR}
         else:
             logging.error(f"Failed to upload {object_name} to s3://{S3_CONTENT_BUCKET}")
     else:
+        if not PUBLISH:
+            logging.info("Publish to s3 disabled")
+            return
         logging.error("Wrote an empty file, no upload to s3..")
         exit(1)
 
