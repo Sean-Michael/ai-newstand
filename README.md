@@ -8,7 +8,7 @@ Inspired by a comment Addy Osmani made in his recent chat with Tim O'Reilly on a
 
 I thought this was very apt because I would like to experiment with agentic systems more AND I find that I struggle with FOMO whenever new technologies come around.
 
-So the plan is to self host the LLM component using vLLM for inference. 
+So the plan is to self host the LLM component using ollama for inference. 
 
 ## Agents
 

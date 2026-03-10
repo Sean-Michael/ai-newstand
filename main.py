@@ -36,7 +36,7 @@ import os
 
 
 # Boolean to control wether or not the generated newsletter is 'published' by uploading to s3
-PUBLISH = False
+PUBLISH = True
 
 DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
 
