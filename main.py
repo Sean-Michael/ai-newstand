@@ -364,21 +364,26 @@ date: {DATE_STR}
 ---
 """
     full_content = frontmatter + final
-    filename = DIGEST_DIR / slug / ".md"
+    filename = DIGEST_DIR / f"{slug}.md"
+    chars_written = 0
 
     with open(filename, "w") as file:
-        written = file.write(full_content)
-    if written > 0:
-        if PUBLISH:
-            object_name = "digests/" / filename
-            uploaded = upload_file(filename, S3_CONTENT_BUCKET, object_name)
-            if uploaded:
-                logging.info(f"Uploaded {object_name} to s3://{S3_CONTENT_BUCKET}")
-            else:
-                logging.error(f"Failed to upload {object_name} to s3://{S3_CONTENT_BUCKET}")
-    else:
-        logging.error("Wrote an empty file..")
-        exit(1)
+        try: 
+            chars_written = file.write(full_content)
+            if chars_written < 1:
+                logging.error(f"Wrote an empty file to {filename}.")
+                return
+        except Exception as e:
+            logging.error(f"Caught exception writing digest: {e}")
+            return
+
+    if PUBLISH:
+        uploaded = upload_file(filename, S3_CONTENT_BUCKET)
+        if uploaded:
+            logging.info(f"Uploaded {filename} to s3://{S3_CONTENT_BUCKET}")
+        else:
+            logging.error(f"Failed to upload {filename} to s3://{S3_CONTENT_BUCKET}")
+
 
 
 def main():
@@ -404,12 +409,12 @@ def main():
     while not ready_to_publish and revisions < MAX_REVISIONS:
         start_revision = perf_counter()
         draft = writer(curated_articles, draft, feedback)
-        draft_filename = DRAFT_DIR / 'draft-' / str(revisions)
+        draft_filename = DRAFT_DIR / f"draft-{revisions}"
         
         with open(draft_filename, "w") as draft_file:
             draft_file.write(draft)
         feedback = editor(draft)
-        edit_filename = DRAFT_DIR / 'edits-' / str(revisions)
+        edit_filename = DRAFT_DIR / f"edits-{revisions}"
         
         with open(edit_filename, "w") as edit_file:
             edit_file.write(feedback)
