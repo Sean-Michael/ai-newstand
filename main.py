@@ -358,14 +358,11 @@ date: {DATE_STR}
 def main():
     """Main execution loop"""
     ready_to_publish = False
-
-
-
     final = ""
     draft = ""
     feedback = ""
     revisions = 0
-    base_filename = datetime
+    base_filename = DATE_STR + '_rev-'
     raw_articles = ingest_rss_feeds()
     curated_articles = researcher(raw_articles)
     if not curated_articles:
@@ -374,8 +371,13 @@ def main():
     logging.info(f"Passing {len(curated_articles)} articles to writer: {[a['source'] + ' - ' + a['title'][:40] for a in curated_articles]}")
     while not ready_to_publish and revisions < MAX_REVISIONS:
         draft = writer(curated_articles, draft, feedback)
-        with open()
+        draft_filename = 'draft-' + base_filename + str(revisions)
+        with open(draft_filename, "w") as draft_file:
+            draft_file.write(draft)
         feedback = editor(draft)
+        edit_filename = 'edits-' + base_filename + str(revisions)
+        with open(edit_filename, "w") as edit_file:
+            edit_file.write(feedback)
         if feedback.strip() == "LGTM":
             ready_to_publish = True
             final = draft
