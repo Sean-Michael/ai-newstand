@@ -35,15 +35,6 @@ from botocore.exceptions import ClientError
 import os
 
 
-DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
-
-BASE_PATH = Path(__file__).parent
-DRAFT_DIR = os.path.join(BASE_PATH, 'drafts', DATE_STR + '/')
-DIGEST_DIR = os.path.join(BASE_PATH, 'digests/')
-
-for d in [DRAFT_DIR, DIGEST_DIR]:
-    os.makedirs(d, exist_ok=True)
-
 # Boolean to control wether or not the generated newsletter is 'published' by uploading to s3
 PUBLISH = False
 
@@ -381,6 +372,16 @@ date: {DATE_STR}
 
 def main():
     """Main execution loop"""
+
+    DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+
+    BASE_PATH = Path(__file__).parent
+    DRAFT_DIR = BASE_PATH / 'drafts' / DATE_STR
+    DIGEST_DIR = BASE_PATH / 'digests'
+
+    for d in [DRAFT_DIR, DIGEST_DIR]:
+        os.makedirs(d, exist_ok=True)
+
     start_main = perf_counter()
     ready_to_publish = False
     final = ""
