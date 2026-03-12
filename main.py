@@ -377,8 +377,8 @@ date: {DATE_STR}
             return
 
     if PUBLISH:
-        filename = f"digests/{slug}.md"
-        uploaded = upload_file(filename, S3_CONTENT_BUCKET)
+        object_name = f"digests/{filename.name}"
+        uploaded = upload_file(filename, S3_CONTENT_BUCKET, object_name)
         if uploaded:
             logging.info(f"Uploaded {filename} to s3://{S3_CONTENT_BUCKET}")
         else:
