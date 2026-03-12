@@ -3,14 +3,15 @@ from requests import Response, RequestException
 
 from bs4 import BeautifulSoup
 
-def fetch_article(url : str) -> Response | RequestException:
+def fetch_article(url : str) -> str | None:
     print(f"URL: {url}\n")
 
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
     except RequestException as e:
-        return e
+        print(f"Caught Request Exception {e}")
+        return None
     
     if response.status_code == 200:
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -28,14 +29,17 @@ def fetch_article(url : str) -> Response | RequestException:
         if content:
             print(f"CONTENT:\n {content.get_text(separator='\n', strip=True)}")
 
-    return response
+        if content:
+            return content.get_text(separator='\n', strip=True)
+        else:
+            return None
 
 
 def main():
-    print(fetch_article('https://www.anthropic.com/engineering/building-c-compiler'))
-    print(fetch_article('https://github.com/jrswab/axe'))
-    print(fetch_article('https://kubernetes.io/blog/2026/03/09/announcing-ai-gateway-wg/'))
-    print(fetch_article('https://huggingface.co/blog/ibm-granite/granite-4-speech'))
+    fetch_article('https://www.anthropic.com/engineering/building-c-compiler')
+    fetch_article('https://github.com/jrswab/axe')
+    fetch_article('https://kubernetes.io/blog/2026/03/09/announcing-ai-gateway-wg/')
+    fetch_article('https://huggingface.co/blog/ibm-granite/granite-4-speech')
 
 if __name__ == "__main__":
     main()
