@@ -1,13 +1,10 @@
 {
     "Docker Blog": "https://www.docker.com/blog/feed/",
     "Hugging Face Blog": "https://huggingface.co/blog/feed.xml",
-    "Google Research Blog": "research.google/blog/rss",
     "MIT News - Artificial intelligence": "https://news.mit.edu/rss/topic/artificial-intelligence2",
     "MIT Technology Review - Artificial intelligence": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
-    "OpenAI News": "https://openai.com/news/rss.xml",
     "AWS News Blog - Artificial intelligence": "https://aws.amazon.com/blogs/aws/category/artificial-intelligence/feed/",
     "Kubernetes Blog": "https://kubernetes.io/feed.xml",
-    "Y Combinator": "https://news.ycombinator.com/rss",
     "Hacker News - Best": "https://hnrss.org/best",
     "Hacker News - DevOps": "https://hnrss.org/newest?q=devops+kubernetes",
     "Hacker News - LLM": "https://hnrss.org/newest?q=LLM",
@@ -15,5 +12,17 @@
     "CNCF Blog": "https://www.cncf.io/feed/",
     "MLOps Community": "https://mlops.community/feed",
     "Weights & Biases": "https://wandb.ai/fully-connected/feed",
-    "LangChain Blog": "https://feeder.co/discover/caa816503a/blog-langchain-dev"
+    "Elevate with Addy Osmani - Substack": "https://addyo.substack.com/feed",
+    "O'reilly Radar - Substack": "https://oreillyradar.substack.com/feed",
+    "One Useful Thing - Substack": "https://www.oneusefulthing.org/feed",
+    "The Pragmatic Engineer - Substack": "https://newsletter.pragmaticengineer.com/feed",
+    "Byte Byte Go - Substack": "https://blog.bytebytego.com/feed",
+    "The Machine Learning Engineer - Substack": "https://machinelearning.substack.com/feed",
+    "Hamel Husain - Substack": "https://hamel.substack.com/feed",
+    "Eugene Yan": "https://eugeneyan.com/feed.xml",
+    "MLOps Newsletter - Substack": "https://mlops.substack.com/feed",
+    "Simon Willison": "https://simonwillison.net/atom/everything/",
+    "SemiAnalysis": "https://semianalysis.com/feed",
+    "Interconnects - Substack": "https://www.interconnects.ai/feed",
+    "Deep Learning Focus - Substack": "https://cameronrwolfe.substack.com/feed"
 }
