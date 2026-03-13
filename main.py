@@ -540,8 +540,9 @@ def main():
 ---
 *Researcher: {RESEARCHER_MODEL} • Writer: {WRITER_MODEL} • Editor: {EDITOR_MODEL}*
 """
-    final_copy = final + metadata
-    write_newsletter(final_copy)
+    if final:
+        final_copy = final + metadata
+        write_newsletter(final_copy)
 
     end_main = perf_counter()
     logging.info(f"Finished main execution in {end_main - start_main}s")
