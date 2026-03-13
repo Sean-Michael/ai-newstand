@@ -16,7 +16,7 @@ TODO:
 - [ ] Map reduce for articles researcher needs to summarize them for the writer
 - [ ] Refactor ingest_rss_feeds to return a list[dict] directly instead of dict[str, list]
 - [ ] DRY
-- [ ] Logging to file and formatted
+- [x] Logging to file
 - [ ] Pull in system logs with some orchestrator script or something like journalctl ollama and nvidia
 - [ ] Change environment vars to click CLI options
 - [x] Add HTTP page request and parse function
@@ -49,6 +49,8 @@ DATE_STR = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
 BASE_PATH = Path(__file__).parent
 DRAFT_DIR = BASE_PATH / 'drafts' / DATE_STR
 DIGEST_DIR = BASE_PATH / 'digests'
+LOG_DIR = BASE_PATH / 'logs'
+LOG_FILE = LOG_DIR / DATE_STR / f"main-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
 
 RESEARCHER_MODEL = "qwen3.5:9b"
 WRITER_MODEL = "qwen3.5:9b"
@@ -68,9 +70,19 @@ AWS_REGION = os.getenv("AWS_REGION", "us-west-2")
 
 
 FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 
-logging.basicConfig(format=FORMAT,level=LOG_LEVEL)
+os.makedirs(LOG_DIR / DATE_STR, exist_ok=True)
+file_handler = logging.FileHandler(LOG_FILE, mode='a')
+file_handler.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(LOG_LEVEL)
+
+logging.basicConfig(
+    format=FORMAT,
+    handlers = [file_handler, console_handler]
+)
 
 current_utc_time = datetime.now(UTC)
 logging.info(f"Current UTC time {current_utc_time}")
@@ -484,7 +496,7 @@ date: {DATE_STR}
 def main():
     """Main execution loop"""
 
-    for d in [DRAFT_DIR, DIGEST_DIR]:
+    for d in [DRAFT_DIR, DIGEST_DIR, LOG_DIR]:
         os.makedirs(d, exist_ok=True)
 
     start_main = perf_counter()
