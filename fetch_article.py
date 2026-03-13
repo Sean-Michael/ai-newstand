@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 def fetch_article(url : str) -> str | None:
     """Requests a page from URL via HTTP"""
-    
+
     print(f"Fetching URL: {url}\n")
 
     try:
@@ -59,9 +59,11 @@ def parse_article(response: Response) -> str | None:
     content = soup.find('article') or soup.find('main') or soup.find('body')
 
     if content:
-        return content.get_text(separator='\n', strip=True)
-    else:
-        return None
+        text = content.get_text(separator='\n', strip=True)
+        if len(text) < 200:
+            return None
+
+        return text
 
 
 def main():
