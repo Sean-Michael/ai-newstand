@@ -1,3 +1,9 @@
+"""
+File: ingest.py
+Author: Sean-Michael Riesterer
+Description: Functions to gather articles from RSS Feeds and parse content with bs4
+"""
+
 import logging
 import requests
 from requests import RequestException, Response

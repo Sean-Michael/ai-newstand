@@ -1,3 +1,9 @@
+"""
+File: publisher.py
+Author: Sean-Michael Riesterer
+Description: Functions for file IO and publishing newsletter to S3
+"""
+
 import boto3
 from botocore.exceptions import ClientError
 import logging
