@@ -1,3 +1,9 @@
+"""
+File: config.py
+Author: Sean-Michael Riesterer
+Description: Global configurations definitions
+"""
+
 import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
