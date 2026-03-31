@@ -11,9 +11,7 @@ import re
 from ollama import chat, ChatResponse
 import logging
 from time import perf_counter
-
 from ingest import fetch_article
-
 from config import (
     DATE_STR,
     RESEARCHER_MODEL,
@@ -22,7 +20,6 @@ from config import (
     NUM_CTX,
     INTERESTS,
 )
-
 from prompts import (
     RESEARCHER_SYSTEM_PROMPT,
     RESEARCHER_USER_PROMPT,

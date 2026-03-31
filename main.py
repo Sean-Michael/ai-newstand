@@ -9,11 +9,8 @@ import logging
 from datetime import datetime, UTC
 from time import perf_counter
 import os
-
 from ingest import ingest_rss_feeds
-
 from publisher import write_newsletter
-
 from config import (
     DATE_STR,
     DIGEST_DIR,
@@ -25,9 +22,7 @@ from config import (
     json_formatter,
     LOG_LEVEL,
 )
-
 from agents import researcher, writer, editor
-
 
 os.makedirs(LOG_DIR / DATE_STR, exist_ok=True)
 file_handler = logging.FileHandler(LOG_FILE, mode="a")
