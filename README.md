@@ -1,4 +1,4 @@
-# AI - Newstand
+# AI - Digests
 
 Daily newsletters on AI/ML/DevOps topics from k8s to Agentic Workflows!
 

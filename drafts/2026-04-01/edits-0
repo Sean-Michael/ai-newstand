@@ -1,6 +1,11 @@
-- Verify the authenticity of the “Holo3” story (URL https://huggingface.co/blog/Hcompany/holo3). It may be a fabricated or non‑public release; replace it with a real, sourced item if necessary.  
-- Verify the authenticity of the “Falcon Perception” story (URL https://huggingface.co/blog/tiiuae/falcon-perception). Check that this model and blog post actually exist; if not, substitute a real, verifiable piece.  
-- All markdown links are correctly formatted with `[text](URL)`.  
-- The “Story of the Day” sections are substantively deeper than the Quick Hits; no re‑sentences or duplicate content.  
-- No filler phrases such as “in this article the author discusses” are present.  
-- Ensure that any remaining stories truly come from reputable, accessible sources before printing.
+- Verify that every Quick Hit link actually points to a real, accessible article. Several titles (e.g., “Holo3: Breaking the Computer Use Frontier,” “Falcon Perception,” “Granite 4.0 3B Vision”) appear novel; confirm the URLs exist and match the headline or adjust the headline to match the content.
+
+- Ensure each link’s display text is the exact article title. If the title differs from the URL’s slug or content, update the link text to match.
+
+- Confirm the Story of the Day link leads to the Docker Blog article about the DGX Station. If the page has moved or been updated, use the current URL and update the description accordingly.
+
+- Double‑check that none of the listed stories are fabricated. Each entry should be traceable to a published source; if a story cannot be verified, remove it or replace it with a legitimate article.
+
+- Maintain consistent styling for all titles: capitalize each major word, use the same punctuation, and keep the link formatting uniform across the digest.
+
+- Add a one‑sentence summary for each Quick Hit to parallel the depth of the Story of the Day, providing readers a quick snapshot of why the article matters.
