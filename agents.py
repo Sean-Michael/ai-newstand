@@ -10,7 +10,6 @@ import json
 import re
 from ollama import chat, ChatResponse
 import logging
-from time import perf_counter
 from ingest import fetch_article
 from config import (
     DATE_STR,
@@ -31,7 +30,7 @@ from prompts import (
     EDITOR_USER_PROMPT,
 )
 from opentelemetry import trace
-from openinference.instrumentation import using_prompt_template, using_session
+from openinference.instrumentation import using_prompt_template
 
 tracer = trace.get_tracer(__name__)
 
@@ -50,7 +49,6 @@ def chat_with_ollama(
         span.set_attribute("input.value", user_prompt)
         span.set_attribute("llm.system", system_prompt)
 
-        start = perf_counter()
         response = chat(
             model=model_name,
             messages=[
@@ -61,7 +59,6 @@ def chat_with_ollama(
             options=options or {"num_ctx": NUM_CTX},
             tools=tools,
         )
-        finish = perf_counter()
 
         # token counts
         prompt_tokens = response.prompt_eval_count or 0
@@ -90,7 +87,7 @@ def chat_with_ollama(
         output = response.message.content or ""
         span.set_attribute("output.value", output)
         logging.debug(f"Response from Ollama: {response}")
-        logging.debug(f"Chat finished in {finish - start}s")
+        logging.debug(f"Chat finished in {(response.eval_duration or 0)}s")
         return response
 
 
@@ -175,7 +172,6 @@ def researcher(raw_articles: dict[str, list]) -> list[dict] | None:
     trimmed_for_curation = [
         {k: a[k] for k in ("source", "title", "summary", "link")} for a in trimmed
     ]
-    response = ""
 
     try:
         with tracer.start_as_current_span("researcher.agent") as span:
