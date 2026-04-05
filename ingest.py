@@ -115,6 +115,8 @@ def ingest_rss_feeds() -> dict:
     for name, url in feeds.items():
         results[name] = []
         feed = feedparser.parse(url)
+        if not feed.entries:
+            logging.warning(f"No entries from feed: {name} ({url})")
         for entry in feed.entries:
             date = entry.get("published_parsed", None) or entry.get(
                 "updated_parsed", None
