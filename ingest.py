@@ -161,3 +161,9 @@ def ingest_rss_feeds() -> list[dict]:
     end = perf_counter()
     logging.debug(f"RSS parser finished in {end - start}s")
     return articles
+
+
+if __name__ == "__main__":
+    """Local main guard in case of running standalone"""
+    logging.basicConfig()
+    ingest_rss_feeds()
