@@ -165,5 +165,5 @@ def ingest_rss_feeds() -> list[dict]:
 
 if __name__ == "__main__":
     """Local main guard in case of running standalone"""
-    logging.basicConfig()
+    logging.basicConfig(level="DEBUG")
     ingest_rss_feeds()
