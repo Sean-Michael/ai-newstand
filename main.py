@@ -87,7 +87,7 @@ def main():
         feedback = ""
         revisions = 0
         raw_articles = ingest_rss_feeds()
-        save_articles_json(raw_articles)
+        # save_articles_json(raw_articles)
         curated_articles = researcher(raw_articles)
 
         if not curated_articles:
