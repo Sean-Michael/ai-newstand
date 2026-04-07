@@ -124,16 +124,5 @@ Ollama runs on port **11434**. The Dockerfile and docker-compose already handle 
 - `drafts/{date}/` — Every draft and edit from the editorial loop, saved per-revision
 - `logs/{date}/` — Structured JSON logs
 
-## Known Issues & Ideas
-
-<!-- TODO: flesh these out as you go -->
-
-- Hyperlink formatting is still flaky — considering post-processing regex
-- Editor sometimes hallucinates validation ("I checked and verified...") without any tools to actually do so
-- Stories repeat across days — need some kind of memory/dedup (DB? rolling window?)
-- Want to add MCP tools so the editor can actually fetch and verify articles
-- Experiment tracking (MLFlow) for model/prompt comparisons
-- Structured output via Ollama's native support
-
 See `notes/` for the full learning journal and TODO list.
 
