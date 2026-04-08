@@ -20,7 +20,7 @@ services:
       - "6006:6006"
       - "4317:4317"
   db:
-    image: postgres:${PG_TAG}
+    image: postgres:${PG_TAG:-18.3}
     restart: always
     environment:
       - POSTGRES_USER=${PG_USER:-postgres}
