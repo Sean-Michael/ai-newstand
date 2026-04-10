@@ -1,5 +1,7 @@
 import psycopg
 from psycopg_pool import ConnectionPool
+from psycopg.types.json import Jsonb
+from psycopg import sql
 import logging
 from dotenv import load_dotenv
 import os
@@ -39,20 +41,53 @@ def create_connection_pool(
         return None
 
 
-if __name__ == "__main__":
-    load_dotenv()
+def create_table(table: str, cols: dict[str, str]):
+    """Create a Table with a given name and column fields"""
+    if pool is None:
+        raise RuntimeError("Pool not initialized")
 
-    postgres_user = os.getenv("PG_USER", "postgres")
-    postgres_db = os.getenv("DB_NAME", "postgres")
-    postgres_host = os.getenv("DB_HOST", "localhost")
-    postgres_password = os.getenv("PG_PASSWORD", "")
-
-    pool = create_connection_pool(
-        postgres_host, postgres_db, postgres_user, postgres_password
+    # build each "col_name TYPE" pair, then join with commas
+    col_defs = sql.SQL(", ").join(
+        sql.SQL("{} {}").format(sql.Identifier(col), sql.SQL(dtype))  # type: ignore
+        for col, dtype in cols.items()
     )
 
+    query = sql.SQL("CREATE TABLE IF NOT EXISTS {table} ({col_defs})").format(
+        table=sql.Identifier(table), col_defs=col_defs
+    )
+
+    with pool.connection() as conn:
+        conn.execute(query)
+
+
+def insert_articles(table: str, col: str, articles: list[dict]):
+    """Saves articles as Jsonb"""
     if pool is None:
-        exit(1)
+        raise RuntimeError("Pool not initialized")
+
+    query = sql.SQL("INSERT INTO {table} ({col}) VALUES (%s)").format(
+        table=sql.Identifier(table), col=sql.Identifier(col)
+    )
+
+    with pool.connection() as conn:
+        with conn.cursor() as cur:
+            cur.executemany(query, [(Jsonb(a),) for a in articles])
+
+
+postgres_user = os.getenv("PG_USER", "postgres")
+postgres_db = os.getenv("DB_NAME", "postgres")
+postgres_host = os.getenv("DB_HOST", "localhost")
+postgres_password = os.getenv("PG_PASSWORD", "")
+
+pool = create_connection_pool(
+    postgres_host, postgres_db, postgres_user, postgres_password
+)
+
+if pool is None:
+    exit(1)
+
+if __name__ == "__main__":
+    load_dotenv()
 
     with pool.connection() as conn:
         with conn.cursor() as cur:
